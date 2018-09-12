@@ -237,7 +237,9 @@ public class JdkSslEngineTest extends SSLEngineTest {
 
                 setupHandlers(serverSslCtx, clientSslCtx);
                 assertTrue(clientLatch.await(2, TimeUnit.SECONDS));
-                assertTrue(clientException instanceof SSLHandshakeException);
+                // When using TLSv1.3 the handshake is NOT sent in an extra round trip which means there will be
+                // no exception reported in this case but just the channel will be closed.
+                assertTrue(clientException instanceof SSLHandshakeException || clientException == null);
             }
         } catch (SkipTestException e) {
             // ALPN availability is dependent on the java version. If ALPN is not available because of

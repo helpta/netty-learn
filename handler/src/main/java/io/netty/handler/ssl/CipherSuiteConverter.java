@@ -423,5 +423,57 @@ final class CipherSuiteConverter {
         return hmacAlgo;
     }
 
+    /**
+     * Returns {@code true} if the the given cipher (in openssl format) is for TLSv1.3, {@code false} otherwise.
+     */
+    static boolean isTLSv13Cipher(String cipher) {
+        // See https://wiki.openssl.org/index.php/TLS1.3#Ciphersuites
+        return "TLS_AES_256_GCM_SHA384".equals(cipher) || "TLS_CHACHA20_POLY1305_SHA256".equals(cipher) ||
+               "TLS_AES_128_GCM_SHA256".equals(cipher) || "TLS_AES_128_CCM_8_SHA256".equals(cipher) ||
+               "TLS_AES_128_CCM_SHA256".equals(cipher);
+    }
+
+    /**
+     * Convert the given ciphers if needed to OpenSSL format and append them to the correct {@link StringBuilder}
+     * depending on if its a TLSv1.3 cipher or not. If this methods returns without throwing an exception its
+     * guaranteed that at least one of the {@link StringBuilder}s contain some ciphers that can be used to configure
+     * OpenSSL.
+     */
+    static void convertToCipherStrings(
+            Iterable<String> cipherSuites, StringBuilder cipherBuilder, StringBuilder cipherTLSv13Builder) {
+        for (String c: cipherSuites) {
+            if (c == null) {
+                break;
+            }
+
+            String converted = toOpenSsl(c);
+            if (converted == null) {
+                converted = c;
+            }
+
+            if (!OpenSsl.isCipherSuiteAvailable(converted)) {
+                throw new IllegalArgumentException("unsupported cipher suite: " + c + '(' + converted + ')');
+            }
+
+            if (isTLSv13Cipher(converted)) {
+                cipherTLSv13Builder.append(converted);
+                cipherTLSv13Builder.append(':');
+            } else {
+                cipherBuilder.append(converted);
+                cipherBuilder.append(':');
+            }
+        }
+
+        if (cipherBuilder.length() == 0 && cipherTLSv13Builder.length() == 0) {
+            throw new IllegalArgumentException("empty cipher suites");
+        }
+        if (cipherBuilder.length() > 0) {
+            cipherBuilder.setLength(cipherBuilder.length() - 1);
+        }
+        if (cipherTLSv13Builder.length() > 0) {
+            cipherTLSv13Builder.setLength(cipherTLSv13Builder.length() - 1);
+        }
+    }
+
     private CipherSuiteConverter() { }
 }
