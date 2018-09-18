@@ -28,6 +28,8 @@ import io.netty.util.internal.PlatformDependent;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,7 +41,11 @@ import static java.util.Arrays.asList;
  * Constants for SSL packets.
  */
 final class SslUtils {
-
+    // See https://tools.ietf.org/html/rfc8446#appendix-B.4
+    private static final Set<String> TLSV13_CIPHERS = Collections.unmodifiableSet(new HashSet<String>(
+            asList("TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256",
+                          "TLS_AES_128_GCM_SHA256", "TLS_AES_128_CCM_8_SHA256",
+                          "TLS_AES_128_CCM_SHA256")));
     // Protocols
     static final String PROTOCOL_SSL_V2_HELLO = "SSLv2Hello";
     static final String PROTOCOL_SSL_V2 = "SSLv2";
@@ -379,6 +385,14 @@ final class SslUtils {
                !hostname.endsWith(".") &&
                !NetUtil.isValidIpV4Address(hostname) &&
                !NetUtil.isValidIpV6Address(hostname);
+    }
+
+    /**
+     * Returns {@code true} if the the given cipher (in openssl format) is for TLSv1.3, {@code false} otherwise.
+     */
+    static boolean isTLSv13Cipher(String cipher) {
+        // See https://tools.ietf.org/html/rfc8446#appendix-B.4
+        return TLSV13_CIPHERS.contains(cipher);
     }
 
     private SslUtils() {

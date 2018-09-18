@@ -1326,7 +1326,7 @@ public class ReferenceCountedOpenSslEngine extends SSLEngine implements Referenc
                 for (int i = 0; i < enabled.length; i++) {
                     String mapped = toJavaCipherSuite(enabled[i]);
                     final String cipher = mapped == null ? enabled[i] : mapped;
-                    if (!OpenSsl.isTlsv13Supported() && CipherSuiteConverter.isTLSv13Cipher(cipher)) {
+                    if (!OpenSsl.isTlsv13Supported() && SslUtils.isTLSv13Cipher(cipher)) {
                         continue;
                     }
                     enabledList.add(cipher);

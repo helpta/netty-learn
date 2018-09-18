@@ -170,7 +170,7 @@ public final class OpenSsl {
                             // Filter out bad input.
                             if (c == null || c.isEmpty() || availableOpenSslCipherSuites.contains(c) ||
                                 // Filter out TLSv1.3 ciphers if not supported.
-                                !tlsv13Supported && CipherSuiteConverter.isTLSv13Cipher(c)) {
+                                !tlsv13Supported && SslUtils.isTLSv13Cipher(c)) {
                                 continue;
                             }
                             availableOpenSslCipherSuites.add(c);
@@ -221,7 +221,7 @@ public final class OpenSsl {
                     AVAILABLE_OPENSSL_CIPHER_SUITES.size() * 2);
             for (String cipher: AVAILABLE_OPENSSL_CIPHER_SUITES) {
                 // Included converted but also openssl cipher name
-                if (!CipherSuiteConverter.isTLSv13Cipher(cipher)) {
+                if (!SslUtils.isTLSv13Cipher(cipher)) {
                     availableJavaCipherSuites.add(CipherSuiteConverter.toJava(cipher, "TLS"));
                     availableJavaCipherSuites.add(CipherSuiteConverter.toJava(cipher, "SSL"));
                 } else {

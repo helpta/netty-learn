@@ -123,33 +123,6 @@ final class CipherSuiteConverter {
     }
 
     /**
-     * Converts the specified Java cipher suites to the colon-separated OpenSSL cipher suite specification.
-     */
-    static String toOpenSsl(Iterable<String> javaCipherSuites) {
-        final StringBuilder buf = new StringBuilder();
-        for (String c: javaCipherSuites) {
-            if (c == null) {
-                break;
-            }
-
-            String converted = toOpenSsl(c);
-            if (converted != null) {
-                c = converted;
-            }
-
-            buf.append(c);
-            buf.append(':');
-        }
-
-        if (buf.length() > 0) {
-            buf.setLength(buf.length() - 1);
-            return buf.toString();
-        } else {
-            return "";
-        }
-    }
-
-    /**
      * Converts the specified Java cipher suite to its corresponding OpenSSL cipher suite name.
      *
      * @return {@code null} if the conversion has failed
@@ -424,16 +397,6 @@ final class CipherSuiteConverter {
     }
 
     /**
-     * Returns {@code true} if the the given cipher (in openssl format) is for TLSv1.3, {@code false} otherwise.
-     */
-    static boolean isTLSv13Cipher(String cipher) {
-        // See https://wiki.openssl.org/index.php/TLS1.3#Ciphersuites
-        return "TLS_AES_256_GCM_SHA384".equals(cipher) || "TLS_CHACHA20_POLY1305_SHA256".equals(cipher) ||
-               "TLS_AES_128_GCM_SHA256".equals(cipher) || "TLS_AES_128_CCM_8_SHA256".equals(cipher) ||
-               "TLS_AES_128_CCM_SHA256".equals(cipher);
-    }
-
-    /**
      * Convert the given ciphers if needed to OpenSSL format and append them to the correct {@link StringBuilder}
      * depending on if its a TLSv1.3 cipher or not. If this methods returns without throwing an exception its
      * guaranteed that at least one of the {@link StringBuilder}s contain some ciphers that can be used to configure
@@ -455,7 +418,7 @@ final class CipherSuiteConverter {
                 throw new IllegalArgumentException("unsupported cipher suite: " + c + '(' + converted + ')');
             }
 
-            if (isTLSv13Cipher(converted)) {
+            if (SslUtils.isTLSv13Cipher(converted)) {
                 cipherTLSv13Builder.append(converted);
                 cipherTLSv13Builder.append(':');
             } else {

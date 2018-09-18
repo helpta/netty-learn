@@ -33,7 +33,9 @@ final class OpenSslTestUtils {
         if (PlatformDependent.javaVersion() >= 11
             && sslClientProvider == SslProvider.JDK && sslServerProvider != SslProvider.JDK) {
             // Make sure we do not use TLSv1.3 as there seems to be a bug currently in the JDK TLSv1.3 implementation.
-            // See http://mail.openjdk.java.net/pipermail/security-dev/2018-September/018191.html
+            // See:
+            //  - http://mail.openjdk.java.net/pipermail/security-dev/2018-September/018191.html
+            //  - https://bugs.openjdk.java.net/projects/JDK/issues/JDK-8210846
             ctx.protocols(PROTOCOL_TLS_V1_2);
         }
         return ctx;
