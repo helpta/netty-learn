@@ -230,7 +230,7 @@ public abstract class ReferenceCountedOpenSslContext extends SslContext implemen
                 throw new SSLException("failed to create an SSL_CTX", e);
             }
 
-            boolean tlsv13Supported = OpenSsl.SUPPORTED_PROTOCOLS_SET.contains(SslUtils.PROTOCOL_TLS_V1_3);
+            boolean tlsv13Supported = OpenSsl.isTlsv13Supported();
             StringBuilder cipherBuilder = new StringBuilder();
             StringBuilder cipherTLSv13Builder = new StringBuilder();
 
@@ -263,6 +263,9 @@ public abstract class ReferenceCountedOpenSslContext extends SslContext implemen
             int options = SSLContext.getOptions(ctx) |
                           SSL.SSL_OP_NO_SSLv2 |
                           SSL.SSL_OP_NO_SSLv3 |
+                          // Disable TLSv1.3 by default for now.
+                          SSL.SSL_OP_NO_TLSv1_3 |
+
                           SSL.SSL_OP_CIPHER_SERVER_PREFERENCE |
 
                           // We do not support compression at the moment so we should explicitly disable it.
@@ -273,11 +276,6 @@ public abstract class ReferenceCountedOpenSslContext extends SslContext implemen
                           // OpenSSLEngine. If tickets are supported SSLSession.getId() will only return an ID on the
                           // server-side if it could make use of tickets.
                           SSL.SSL_OP_NO_TICKET;
-
-            if (!tlsv13Supported || cipherTLSv13Builder.length() == 0) {
-                // Either TLSV1.3 is not supported or we have no ciphers configured that can be used with TLSv1.3
-                options |= SSL.SSL_OP_NO_TLSv1_3;
-            }
 
             if (cipherBuilder.length() == 0) {
                 // No ciphers that are compatible with SSLv2 / SSLv3 / TLSv1 / TLSv1.1 / TLSv1.2

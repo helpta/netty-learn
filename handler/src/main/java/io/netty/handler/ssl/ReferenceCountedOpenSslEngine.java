@@ -1397,7 +1397,6 @@ public class ReferenceCountedOpenSslEngine extends SSLEngine implements Referenc
         if (isProtocolEnabled(opts, SSL.SSL_OP_NO_TLSv1_2, PROTOCOL_TLS_V1_2)) {
             enabled.add(PROTOCOL_TLS_V1_2);
         }
-        // Only supported on Java11 and later.
         if (isProtocolEnabled(opts, SSL.SSL_OP_NO_TLSv1_3, PROTOCOL_TLS_V1_3)) {
             enabled.add(PROTOCOL_TLS_V1_3);
         }
