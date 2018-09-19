@@ -76,6 +76,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.SSLParameters;
@@ -2358,21 +2359,35 @@ public abstract class SSLEngineTest {
             int srcLen = plainClientOut.remaining();
             SSLEngineResult result;
 
-            while (encClientToServer.position() <= server.getSession().getPacketBufferSize()) {
+            int count = 0;
+            do {
+                int plainClientOutPosition = plainClientOut.position();
+                int encClientToServerPosition = encClientToServer.position();
                 result = client.wrap(plainClientOut, encClientToServer);
+                if (result.getStatus() == Status.BUFFER_OVERFLOW) {
+                    // We did not have enough room to wrap
+                    assertEquals(plainClientOutPosition, plainClientOut.position());
+                    assertEquals(encClientToServerPosition, encClientToServer.position());
+                    break;
+                }
                 assertEquals(SSLEngineResult.Status.OK, result.getStatus());
                 assertEquals(srcLen, result.bytesConsumed());
                 assertTrue(result.bytesProduced() > 0);
 
                 plainClientOut.clear();
-            }
 
+                ++count;
+            } while (encClientToServer.position() < server.getSession().getPacketBufferSize());
+
+            // Check that we were able to wrap multiple times.
+            assertTrue(count >= 2);
             encClientToServer.flip();
 
             result = server.unwrap(encClientToServer, plainServerOut);
             assertEquals(SSLEngineResult.Status.OK, result.getStatus());
             assertTrue(result.bytesConsumed() > 0);
             assertTrue(result.bytesProduced() > 0);
+            assertTrue(encClientToServer.hasRemaining());
         } finally {
             cert.delete();
             cleanupClientSslEngine(client);
